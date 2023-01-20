@@ -6,6 +6,7 @@ locals {
   partition           = data.aws_partition.current.partition
   role_sts_externalid = flatten([var.role_sts_externalid])
   role_name_condition = var.role_name != null ? var.role_name : "${var.role_name_prefix}*"
+  custom_trust_policy = var.create_custom_role_trust_policy ? var.custom_role_trust_policy : ""
 }
 
 data "aws_iam_policy_document" "assume_role" {
@@ -133,7 +134,7 @@ resource "aws_iam_role" "this" {
   permissions_boundary  = var.role_permissions_boundary_arn
 
   assume_role_policy = coalesce(
-    var.custom_role_trust_policy,
+    local.custom_trust_policy,
     try(data.aws_iam_policy_document.assume_role_with_mfa[0].json,
       data.aws_iam_policy_document.assume_role[0].json
     )
